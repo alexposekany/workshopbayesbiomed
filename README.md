@@ -125,3 +125,254 @@ lines(newconc,predict(lmDNase,newdata = data.frame(conc=newconc)),col="red",lwd=
 lines(newconc,predict(bayesregDNase,newdata = data.frame(conc=newconc)),col="darkblue",lwd=3)
 legend("bottomright",legend = c("Bayes","Classical"),col=c("darkblue","red"),lwd = 5)
 ```
+
+# Algortihms 
+
+We first adapt the example from [Montana University](https://math.montana.edu/ahoegh/teaching/stat532/labs/STANDemo.html) for our body size example.
+
+```
+## Simulate Data
+set.seed(45725)
+N = 5000
+mu = 175
+sigma = 14
+sigmasq = sigma^2
+y = rnorm(N, mean = mu, sd = sigma)
+
+## set up priors
+mu.0 <- 0
+tausq.0 <- 100
+nu.0 <- .5
+sigmasq.0 <- 1
+rate.param <- nu.0 * sigmasq.0 / 2
+shape.param <- nu.0 / 2
+```
+
+## Example - Body Sizes - Gibbs Sampler
+
+```
+### initialize vectors and set starting values 
+num.sims <- 10000
+mu.samples <- rep(0, num.sims)
+sigmasq.samples <- rep(1, num.sims)
+
+mean.y <- mean(y)
+nu.n <- nu.0 + N
+
+for (iter in 2:num.sims){
+  # sample theta from full conditional
+  mu.n <- (mu.0 / tausq.0 + N * mean.y / sigmasq.samples[iter - 1]) / (1 / tausq.0 + N / sigmasq.samples[iter - 1] )
+  tausq.n <- 1 / (1/tausq.0 + N / sigmasq.samples[iter - 1])
+  mu.samples[iter - 1] <- rnorm(1,mu.n,sqrt(tausq.n))
+  
+  # sample (1/sigma.sq) from full conditional
+  sigmasq.n.theta <- 1/nu.n*(nu.0*sigmasq.0 + sum((y - mu.samples[iter])^2))
+  sigmasq.samples[iter] <- rinvgamma(1,shape = nu.n/2, rate = nu.n*sigmasq.n.theta/2)
+}
+# compute posterior mean and quantiles
+mean(mu.samples)
+quantile(mu.samples, probs = c(.025, .975))
+
+mean(sigmasq.samples)
+quantile((sigmasq.samples)^(1/2), probs = c(.025, .975))
+
+par(mfrow=c(1,2))
+# plot marginal posterior of mu
+hist(mu.samples,xlab=expression(mu),main=expression('Marginal Posterior of ' ~ mu),probability=T,xlim = c(160,190),breaks = seq(0,200,by=5),ylim=c(0,0.16))
+lines(density(mu.samples))
+abline(v=mu,col='red',lwd=2)
+# plot marginal posterior of sigmasq
+hist((sigmasq.samples)^(1/2),xlab=expression(sigma[2]),main=expression('Marginal Posterior of ' ~ sigma[2]),probability=T,xlim = c(160,190),breaks = seq(0,200,by=5),ylim=c(0,0.16))
+lines(density((sigmasq.samples)^(1/2)))
+abline(v=13.35^2,col='red',lwd=2)
+
+par(mfrow=c(1,2))
+# plot trace plots
+plot(mu.samples,type='l',ylab=expression(mu), main=expression('Trace plot for ' ~ mu))
+abline(h=mu,lwd=2,col='red')
+plot(sigmasq.samples^(1/2),type='l',ylab=expression(sigma[2]), main=expression('Trace plot for ' ~ sigma[2]))
+abline(h=13.35^2,lwd=2,col='red')
+```
+Rerun the example with a more informative prior to remove the bias of the mean
+
+```
+## set up priors
+mu.0 <- 170
+tausq.0 <- 100
+nu.0 <- .5
+sigmasq.0 <- 1
+rate.param <- nu.0 * sigmasq.0 / 2
+shape.param <- nu.0 / 2
+
+library(invgamma)
+### initialize vectors and set starting values 
+num.sims <- 10000
+mu.samples <- rep(0, num.sims)
+sigmasq.samples <- rep(1, num.sims)
+
+mean.y <- mean(y)
+nu.n <- nu.0 + N
+
+for (iter in 2:num.sims){
+  # sample theta from full conditional
+  mu.n <- (mu.0 / tausq.0 + N * mean.y / sigmasq.samples[iter - 1]) / (1 / tausq.0 + N / sigmasq.samples[iter - 1] )
+  tausq.n <- 1 / (1/tausq.0 + N / sigmasq.samples[iter - 1])
+  mu.samples[iter - 1] <- rnorm(1,mu.n,sqrt(tausq.n))
+  
+  # sample (1/sigma.sq) from full conditional
+  sigmasq.n.theta <- 1/nu.n*(nu.0*sigmasq.0 + sum((y - mu.samples[iter])^2))
+  sigmasq.samples[iter] <- rinvgamma(1,shape = nu.n/2, rate = nu.n*sigmasq.n.theta/2)
+}
+# compute posterior mean and quantiles
+mean(mu.samples)
+quantile(mu.samples, probs = c(.025, .975))
+
+mean(sigmasq.samples)
+quantile((sigmasq.samples)^(1/2), probs = c(.025, .975))
+
+par(mfrow=c(1,2))
+# plot marginal posterior of mu
+hist(mu.samples,xlab=expression(mu),main=expression('Marginal Posterior of ' ~ mu),probability=T,xlim = c(160,190),breaks = seq(0,200,by=5),ylim=c(0,0.16))
+lines(density(mu.samples))
+abline(v=mu,col='red',lwd=2)
+# plot marginal posterior of sigmasq
+hist((sigmasq.samples)^(1/2),xlab=expression(sigma[2]),main=expression('Marginal Posterior of ' ~ sigma[2]),probability=T,xlim = c(160,190),breaks = seq(0,200,by=5),ylim=c(0,0.16))
+lines(density((sigmasq.samples)^(1/2)))
+abline(v=13.35^2,col='red',lwd=2)
+
+par(mfrow=c(1,2))
+# plot trace plots
+plot(mu.samples,type='l',ylab=expression(mu), main=expression('Trace plot for ' ~ mu))
+abline(h=mu,lwd=2,col='red')
+plot(sigmasq.samples^(1/2),type='l',ylab=expression(sigma[2]), main=expression('Trace plot for ' ~ sigma[2]))
+abline(h=13.35^2,lwd=2,col='red')
+
+```
+
+## Metropolis-Hastings Sampler
+
+```
+# Run Metropolis Algorithm
+num.mcmc <- 15000
+stepsize.mu <- 2
+stepsize.sigmasq <- .75
+acceptratio.mu <- acceptratio.sigmasq <- rep(0,num.mcmc)
+mu.samplesmh <- rep(170,num.mcmc)
+sigmasq.samplesmh <- sigmasq.star <- rep(3, num.mcmc)
+
+for (iter in 2:num.mcmc){
+  # mu
+  mu.star <- mu.samplesmh[iter] + rnorm(1,0,stepsize.mu)
+  log.p.current <- sum(dnorm(y, mean = mu.samplesmh[iter - 1],
+                             sd = sqrt(sigmasq.samplesmh[iter - 1]), log=T)) +
+  dnorm(mu.samplesmh[iter - 1],mean = mu.0, sd = sqrt(tausq.0), log=T)
+  log.p.star <- sum(dnorm(y, mean = mu.star, sd = sqrt(sigmasq.samplesmh[iter - 1]), log=T)) +
+    dnorm(mu.star, mean = mu.0, sd = sqrt(tausq.0), log=T)
+
+  log.r <- log.p.star - log.p.current
+
+  if (log(runif(1)) < log.r){
+    mu.samplesmh[iter] <- mu.star
+    acceptratio.mu[iter] <- 1
+  } else{
+    mu.samplesmh[iter] <- mu.samplesmh[iter - 1]
+  }
+  # sigma
+  sigmasq.star[iter] <- sigmasq.samplesmh[iter-1] + rnorm(1,0,stepsize.sigmasq)
+  log.p.current <- sum(dnorm(y, mean = mu.samplesmh[iter], 
+                             sd = sqrt(sigmasq.samplesmh[iter - 1]), log=T)) + 
+     dinvgamma(sigmasq.samplesmh[iter - 1], rate = rate.param, shape = shape.param, log=T)
+  log.p.star <- sum(dnorm(y, mean = mu.samplesmh[iter], sd = sqrt(sigmasq.star[iter]), log=T)) +
+    dinvgamma(sigmasq.star[iter], rate = rate.param, shape = shape.param, log=T)
+
+  log.r <- log.p.star - log.p.current
+  if (log(runif(1)) < log.r){
+    sigmasq.samplesmh[iter] <- sigmasq.star[iter]
+    acceptratio.sigmasq[iter] <- 1
+  } else{
+    sigmasq.samplesmh[iter] <- sigmasq.samplesmh[iter - 1]
+  }
+}
+
+paste("Mean Acceptance rate of mu:",mean(acceptratio.mu))
+paste("Mean Acceptance rate of sigmasq:",mean(acceptratio.sigmasq))
+
+paste("Posterior Mean of mu:",round(mean(mu.samplesmh),digits=2))
+paste("Posterior 95% HPDI of mu:",paste(round(quantile(mu.samplesmh, probs = c(.025, .975)),digits=2),collapse = ", "))
+
+paste("Posterior Mean of sigmasq:",round(mean((sigmasq.samplesmh)^(1/2)),digits=2))
+paste("Posterior 95% HPDI of sigmasq:",paste(round(quantile(sigmasq.samplesmh^(1/2), probs = c(.025, .975)),digits=2),collapse = ", "))
+
+par(mfrow=c(1,2))
+plot(mu.samplesmh,type='l')
+abline(h=mu,lwd=2,col='red')
+
+plot((sigmasq.samplesmh)^(1/2),type='l')
+abline(h=sigmasq,lwd=2,col='red')
+```
+
+## JAGS
+
+```
+
+library(rjags)
+# Define the model:
+modelString = "
+model {
+    for (i in 1:N) {
+        y[i] ~ dnorm(mu, tau.sq)
+    }
+    mu ~ dnorm(0, 1/ 100)
+    tau.sq  ~ dgamma(.005, .005)
+  sigmasq <- 1 / tau.sq
+}
+" 
+writeLines( modelString , con="TEMPmodel.txt" )
+
+jags <- jags.model('TEMPmodel.txt',
+                   data = list('y' = y,
+                               'N' = N),
+                   n.chains = 4,
+                   n.adapt = 100)
+ 
+
+
+codaSamples = coda.samples( jags , variable.names=c("mu","tau.sq", 'sigmasq') ,
+                            n.iter=1000)
+
+summary(codaSamples)
+plot(codaSamples)
+```
+
+## RStan
+
+```
+library(rstan)
+set.seed(11122017)
+N = 5000
+mu = 170
+sigmasq = 10
+y = rnorm(N, mu, sqrt(sigmasq))
+num.mcmc <- 1000
+
+stancode <- 'data {
+  int<lower=0> N; 
+  vector[N] y;
+}
+parameters {
+  real<lower=0> sigmasq;
+  real mu; 
+} 
+model {
+  mu ~ normal(0, sqrt(100));
+  sigmasq ~ inv_gamma(.005, .005);
+  y ~ normal(mu, sqrt(sigmasq));
+}' 
+
+stan_data = list(N=N, y=y) # data passed to stan 
+# set up the model
+stan_model = stan(model_code = stancode, data = stan_data, chains = 1)
+stanfit = stan(fit = stan_model, data = stan_data,
+               iter=num.mcmc) # run the model print(stanfit,digits=2)
+print(stanfit)
+```
