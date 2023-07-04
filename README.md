@@ -376,3 +376,92 @@ stanfit = stan(fit = stan_model, data = stan_data,
                iter=num.mcmc) # run the model print(stanfit,digits=2)
 print(stanfit)
 ```
+
+# Practical Example for Logistic Regression with Pima Indian Data 
+
+```
+library(MASS)
+summary(Pima.tr2)
+## put histograms on the diagonal
+panel.hist <- function(x, ...)
+{
+    usr <- par("usr"); on.exit(par(usr))
+    par(usr = c(usr[1:2], 0, 1.5) )
+    h <- hist(x, plot = FALSE)
+    breaks <- h$breaks; nB <- length(breaks)
+    y <- h$counts; y <- y/max(y)
+    rect(breaks[-nB], 0, breaks[-1], y, col = "cyan", ...)
+}
+## put (absolute) correlations on the upper panels,
+## with size proportional to the correlations.
+panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
+{
+    usr <- par("usr"); on.exit(par(usr))
+    par(usr = c(0, 1, 0, 1))
+    r <- abs(cor(x, y,use="pairwise.complete.obs",method="spearman"))
+    txt <- format(c(r, 0.123456789), digits = digits)[1]
+    txt <- paste0(prefix, txt)
+    if(missing(cex.cor)) cex.cor <- 0.8/strwidth(txt)
+    text(0.5, 0.5, txt, cex = cex.cor * r,col=ifelse(r>=0.6,"red",ifelse(r>=0.4,"orange","black")))
+}
+pairs(MASS::Pima.tr2, lower.panel = panel.smooth, upper.panel = panel.cor,
+diag.panel = panel.hist, las=1)
+```
+## Reference Analysis (Classical Logistic Regression)
+
+```
+summary(logitPima<-glm(formula = type ~ . - npreg - skin, family = "binomial",
+data = Pima.tr2))
+PredictTrain <- round(predict(logitPima,newdata = Pima.tr2, type = "response"),digits = 0)
+table(PredictTrain,Pima.tr2$type)
+```
+
+You can obtain a more detailed [Base Line Reference Logistic Regression of Pima Indian Diabetes Data (Kaggle)](https://www.kaggle.com/code/ksp585/pima-indian-diabetes-logistic-regression-with-r) on Kaggle.
+
+## RStan 
+
+```
+library(rstanarm)
+fit <- stan_glm(type ~  glu + bp  + bmi + ped + age,
+                data = MASS::Pima.te,
+                family = binomial(),
+                prior_intercept = normal(0, 10),
+                prior = normal(0, 2.5),
+                prior_aux = cauchy(0, 2.5),
+                chains = 4,
+                iter = 2000,
+                seed = 12345)
+print(fit)
+fit$stanfit
+plot(fit)
+```
+You can obtain a more detailed [Base Line Reference Logistic Regression of Pima Indian Diabetes Data with rstanarm (Kaggle)](https://www.kaggle.com/code/avehtari/bayesian-logistic-regression-with-rstanarm) on Kaggle. 
+
+## INLA
+
+```
+library(INLA)
+library(data.table)
+
+library(MASS)
+# Load the Pima Indian diabetes dataset from the mlbench package
+data(Pima.tr2, package = "MASS")
+
+# Split the data into training and testing sets using a 70/30 split
+set.seed(1234)
+train <- sample(nrow(Pima.tr2), 0.7 * nrow(Pima.tr2))
+test <- setdiff(1:nrow(Pima.tr2), train)
+
+y <- as.matrix(as.numeric(Pima.tr2[train, 8])-1)
+x <- as.matrix(Pima.tr2[train, -8])
+
+formula <- y ~ x
+
+model <- inla(formula, family = "binomial", data = list(y = y, x = x), control.compute = list(dic = TRUE))
+
+summary(model)
+```
+
+
+
+
