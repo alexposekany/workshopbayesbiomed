@@ -26,6 +26,10 @@ library(invgamma)
 
 ## Covid Example
 
+We recalculate the estimation of the prevalence of Covid19 in spring 2020. Samples from 1279 persons were analysed with PCR testing procedures. Out of all those not a single randomly selected person was tested positively. This obviously breaks standard testing mechanisms for extimating the proportion of infected person in Austria. 
+
+However, additional information is available from similar tests in Germany which had a comparable behaviour of the spread of the disease at that time. In the same time span 4 positive cases out of 4068 had been found.
+
 ###  Prior Choices
 ```
 alpha=1.4
@@ -103,7 +107,7 @@ polygon(x=c(HDIlower,
 legend("topright", c("posterior", "HPD interval 95%"), col=c("blue","#FF990022"),lwd=4)
 ```
 
-## Bayesian Regression - practical howto
+## Bayesian Regression - Practical How to
 
 ```
 library(bayesreg)
