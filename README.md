@@ -1,4 +1,4 @@
-# workshopbayesbiomed
+# Workshop on Bayesian Methods in Biology and Medicine
 
 You will find the R Markdown File for the Workshop under Presentation_Bayes_Biomed.Rmd 
 
@@ -108,6 +108,8 @@ legend("topright", c("posterior", "HPD interval 95%"), col=c("blue","#FF990022")
 ```
 
 ## Bayesian Regression - Practical How to
+
+ Compare the Bayesian against the frequentist results for dataset DNase and model lm(density~I(conc)^(1/2),data=DNase)
 
 ```
 library(bayesreg)
