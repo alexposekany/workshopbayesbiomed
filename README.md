@@ -1,6 +1,7 @@
 # Workshop on Bayesian Methods in Biology and Medicine
 
 You will find the R Markdown File for the Workshop under Presentation_Bayes_Biomed.Rmd 
+The Video Recording of this course is available on [YouTube](https://youtu.be/h_pEORzO8VE) as part of a lecture series on [Statistical Computing and computer intensive methods](https://www.youtube.com/playlist?list=PLM2jwuiJI2BNQvbNBCTu5xdsJc978vTwX).
 
 To install relevant packages use 
 
