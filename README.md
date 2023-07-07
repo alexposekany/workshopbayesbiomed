@@ -1,7 +1,7 @@
 # Workshop on Bayesian Methods in Biology and Medicine
 
 You will find the R Markdown File for the Workshop under Presentation_Bayes_Biomed.Rmd 
-The Video Recording of this course is available on [YouTube](https://youtu.be/h_pEORzO8VE) as part of a lecture series on [Statistical Computing and computer intensive methods](https://www.youtube.com/playlist?list=PLM2jwuiJI2BNQvbNBCTu5xdsJc978vTwX).
+The Video Recording of this course is available on YouTube for [Part 1](https://youtu.be/h_pEORzO8VE) and [Part 2](https://youtu.be/91FQlkzZMRs) as part of a lecture series on [Statistical Computing and computer intensive methods](https://www.youtube.com/playlist?list=PLM2jwuiJI2BNQvbNBCTu5xdsJc978vTwX).
 
 To install relevant packages use 
 
@@ -9,6 +9,11 @@ To install relevant packages use
 list.of.packages <- c('ggplot2','dplyr',"tidyr",'lattice',"Pareto","HDInterval","rstanarm","rstan","rjags","bayess","MCMCpack","MASS","data.table","bayesreg","boot","MCMCvis","Rgraphviz","graph","invgamma")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
+# INLA
+install.packages("INLA",repos=c(getOption("repos"),INLA="https://inla.r-inla-download.org/R/stable"), dep=TRUE)
+inla.upgrade()
+install.packages("BiocManager")
+
 library(Pareto)
 library(HDInterval)
 library(rstanarm)
